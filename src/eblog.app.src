@@ -1,0 +1,12 @@
+{application, eblog,
+ [
+  {description, ""},
+  {vsn, "1"},
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib
+                 ]},
+  {mod, { eblog_app, []}},
+  {env, []}
+ ]}.
