@@ -1,3 +1,6 @@
 [submodule "lib/misultin"]
 	path = lib/misultin
 	url = https://github.com/ostinelli/misultin.git
+[submodule "lib/mustache"]
+	path = lib/mustache
+	url = https://github.com/mojombo/mustache.erl.git
