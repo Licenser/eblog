@@ -7,4 +7,4 @@ clean:
 	make -C lib/misultin clean
 
 run: compile
-	echo erl -pa ebin -pa $(LIBS)
+	erl -pa ebin -pa $(LIBS)
