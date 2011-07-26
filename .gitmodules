@@ -4,3 +4,6 @@
 [submodule "lib/mustache"]
 	path = lib/mustache
 	url = https://github.com/mojombo/mustache.erl.git
+[submodule "lib/erlmarkdown"]
+	path = lib/erlmarkdown
+	url = https://github.com/gordonguthrie/erlmarkdown

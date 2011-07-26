@@ -1,0 +1,1 @@
+-record(post, {id, title, keywords, body}).

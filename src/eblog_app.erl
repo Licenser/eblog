@@ -46,7 +46,9 @@
 % Description: Starts the application
 % ----------------------------------------------------------------------------------------------------------
 start(_Type, _StartArgs) ->
-	% start main application supervisor
+                                                % start main application supervisor
+    uuid:init(),
+    db:start(),
     Options = [
                {port, 8080},
                {loop, fun(Req) -> web_srv:handle_http(Req) end}

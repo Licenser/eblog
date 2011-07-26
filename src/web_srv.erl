@@ -109,20 +109,20 @@ code_change(_OldVsn, State, _Extra) ->
 
 handle_http(Req) -> 
 	% get params depending on method
-	Method = Req:get(method),
-	case Method of
-		'GET' ->
-			Args = Req:parse_qs();
-		'POST' ->
-			Args = Req:parse_post()
-	end,
-	% build an XML with all parameters and values
-	BuildXml = fun({Param, Value}, Acc) ->
-		[lists:flatten(io_lib:format("<param><name>~s</name><value>~s</value></param>", [Param, Value]))|Acc]
-	end,
-	Xml = lists:flatten(lists:reverse(lists:foldl(BuildXml, [], Args))),
-	% output
-	Req:ok([{"Content-Type", "text/xml"}], "<misultin_test><method>~s</method>~s</misultin_test>", [Method, Xml]).
+    Method = Req:get(method),
+    case Method of
+        'GET' ->
+            Args = Req:parse_qs();
+        'POST' ->
+            Args = Req:parse_post()
+    end,
+    case Req:resource([lowercase, urldecode]) of
+        ["feed"] -> Req:ok();
+        ["feed", "atom"] -> Req:ok();
+        ["feed", "rss"] -> Req:ok();
+        ["style", "blog.css"] -> Req:file("priv/style/blog.css");
+        _ -> Req:ok([{"Content-Type", "text/html"}], index:render())
+    end.
 
 % ---------------------------- /\ misultin requests --------------------------------------------------------
 
