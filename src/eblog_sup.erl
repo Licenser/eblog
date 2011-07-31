@@ -44,7 +44,7 @@
 % Description: Starts the supervisor
 % ----------------------------------------------------------------------------------------------------------
 start_link(Options) ->
-	supervisor:start_link(?MODULE, [Options]).
+    supervisor:start_link(?MODULE, [Options]).
 	
 % ============================ /\ API ======================================================================
 
@@ -57,17 +57,17 @@ start_link(Options) ->
 % ----------------------------------------------------------------------------------------------------------
 init([Options]) ->
 	% misultin specs
-	MisultinSpecs = {misultin,
-		{misultin, start_link, [Options]},
-		permanent, infinity, supervisor, [misultin]
-	},	
+    MisultinSpecs = {misultin,
+                     {misultin, start_link, [Options]},
+                     permanent, infinity, supervisor, [misultin]
+                    },	
 	% application gen server specs
-	ServerSpecs = {web_srv,
-		{web_srv, start_link, []},
-		permanent, 60000, worker, [web_srv]
-	},
+    ServerSpecs = {web_srv,
+                   {web_srv, start_link, []},
+                   permanent, 60000, worker, [web_srv]
+                  },
 	% spawn
-	{ok, {{one_for_all, 5, 30}, [MisultinSpecs, ServerSpecs]}}.
+    {ok, {{one_for_all, 5, 30}, [MisultinSpecs, ServerSpecs]}}.
 
 % ============================ /\ SUPERVISOR CALLBACKS =====================================================
 

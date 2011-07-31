@@ -1,5 +1,9 @@
 <div class="post" id="{{id}}">
 <div class="title">{{title}}</div>
 <div class="body">{{body}}</div>
-<div class="keywords">{{keywords}}</div>
+<div class="keywords">
+{{#keywords}}
+<div class="keyword">{{keyword}}</div>
+{{/keywords}}
+</div>
 </div>

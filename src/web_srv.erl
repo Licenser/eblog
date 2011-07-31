@@ -34,7 +34,7 @@
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 % API
--export([start_link/0, handle_http/1]).
+-export([start_link/0, handle_http/3]).
 
 
 % ============================ \/ API ======================================================================
@@ -42,7 +42,7 @@
 % Function: {ok,Pid} | ignore | {error, Error}
 % Description: Starts the server.
 start_link() ->
-	gen_server:start_link(?MODULE, [], []).
+    gen_server:start_link(?MODULE, [], []).
 
 % ============================ /\ API ======================================================================
 
@@ -54,7 +54,7 @@ start_link() ->
 % Description: Initiates the server.
 % ----------------------------------------------------------------------------------------------------------
 init([]) ->
-	{ok, {}}.
+    {ok, {}}.
 
 % ----------------------------------------------------------------------------------------------------------
 % Function: handle_call(Request, From, State) -> {reply, Reply, State} | {reply, Reply, State, Timeout} |
@@ -65,7 +65,7 @@ init([]) ->
 
 % handle_call generic fallback
 handle_call(_Request, _From, State) ->
-	{reply, undefined, State}.
+    {reply, undefined, State}.
 
 % ----------------------------------------------------------------------------------------------------------
 % Function: handle_cast(Msg, State) -> {noreply, State} | {noreply, State, Timeout} | {stop, Reason, State}
@@ -74,7 +74,7 @@ handle_call(_Request, _From, State) ->
 
 % handle_cast generic fallback (ignore)
 handle_cast(_Msg, State) ->
-	{noreply, State}.
+    {noreply, State}.
 
 % ----------------------------------------------------------------------------------------------------------
 % Function: handle_info(Info, State) -> {noreply, State} | {noreply, State, Timeout} | {stop, Reason, State}
@@ -83,7 +83,7 @@ handle_cast(_Msg, State) ->
 
 % handle_info generic fallback (ignore)
 handle_info(_Info, State) ->
-	{noreply, State}.
+    {noreply, State}.
 
 % ----------------------------------------------------------------------------------------------------------
 % Function: terminate(Reason, State) -> void()
@@ -91,14 +91,14 @@ handle_info(_Info, State) ->
 % the gen_server terminates with Reason. The return value is ignored.
 % ----------------------------------------------------------------------------------------------------------
 terminate(_Reason, _State) ->
-	terminated.
+    terminated.
 
 % ----------------------------------------------------------------------------------------------------------
 % Func: code_change(OldVsn, State, Extra) -> {ok, NewState}
 % Description: Convert process state when code is changed.
 % ----------------------------------------------------------------------------------------------------------
 code_change(_OldVsn, State, _Extra) ->
-	{ok, State}.
+    {ok, State}.
 
 % ============================ /\ GEN_SERVER CALLBACKS =====================================================
 
@@ -107,22 +107,39 @@ code_change(_OldVsn, State, _Extra) ->
 
 % ---------------------------- \/ misultin requests --------------------------------------------------------
 
-handle_http(Req) -> 
-	% get params depending on method
-    Method = Req:get(method),
-    case Method of
-        'GET' ->
-            Args = Req:parse_qs();
-        'POST' ->
-            Args = Req:parse_post()
-    end,
-    case Req:resource([lowercase, urldecode]) of
-        ["feed"] -> Req:ok();
-        ["feed", "atom"] -> Req:ok();
-        ["feed", "rss"] -> Req:ok();
-        ["style", "blog.css"] -> Req:file("priv/style/blog.css");
-        _ -> Req:ok([{"Content-Type", "text/html"}], index:render())
-    end.
+
+handle_http('GET', ["admin"], Req) ->
+    case Req:get_cookie_value("user", Req:get_cookies()) of
+        "heinz" -> Req:ok([{"Content-Type", "text/html"}], admin:render());
+        _ -> Req:ok([{"Content-Type", "text/html"}], login:render())
+    end;
+handle_http('POST', ["admin"], Req) ->
+    case Req:parse_post() of
+        [{"User","heinz"},{"Password","heinz"}] ->
+            Req:ok([Req:set_cookie("user", "heinz", [{max_age, 365*24*3600}]), {"Content-Type", "text/html"}], admin:render());
+        _ ->
+            Req:ok([{"Content-Type", "text/html"}], login:render())
+    end;
+handle_http('POST', ["post"], Req) ->
+    case Req:get_cookie_value("user", Req:get_cookies()) of
+        "heinz" -> 
+            [{"title",Title},
+             {"post", Post},
+             {"keywords", Keywords}] = Req:parse_post(),
+            db:insert(Title, re:split(Keywords, ",\s*", [{return,list}]), Post),
+            Req:ok([{"Content-Type", "text/html"}], admin:render());
+        _ -> Req:ok([{"Content-Type", "text/html"}], login:render())         
+    end;
+handle_http('GET', ["feed"], Req) -> 
+    Req:ok([{"Content-Type", "application/rss+xml"}], rss:render());
+handle_http('GET', ["feed", "atom"], Req) -> 
+    Req:ok([{"Content-Type", "application/atom+xml"}], atom:render());
+handle_http('GET', ["style", "blog.css"], Req) ->
+    Req:file("priv/style/blog.css");
+handle_http('GET', ["favicon.ico"], Req) ->
+    Req:respond(404, [], "");
+handle_http('GET', _, Req) -> 
+    Req:ok([{"Content-Type", "text/html"}], index:render()).
 
 % ---------------------------- /\ misultin requests --------------------------------------------------------
 

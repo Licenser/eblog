@@ -46,12 +46,11 @@
 % Description: Starts the application
 % ----------------------------------------------------------------------------------------------------------
 start(_Type, _StartArgs) ->
-                                                % start main application supervisor
-    uuid:init(),
+    % start main application supervisor
     db:start(),
     Options = [
                {port, 8080},
-               {loop, fun(Req) -> web_srv:handle_http(Req) end}
+               {loop, fun(Req) -> web_srv:handle_http(Req:get(method), Req:resource([lowercase, urldecode]), Req) end}
               ],
     eblog_sup:start_link(Options).
 
@@ -68,5 +67,3 @@ stop(_State) ->
 % ============================ \/ INTERNAL FUNCTIONS =======================================================
 
 % ============================ /\ INTERNAL FUNCTIONS =======================================================
-
-

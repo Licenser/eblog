@@ -1,6 +1,6 @@
 {application, eblog,
 [
-	{description, "Misultin Application Example"},
+        {description, "Misultin Application Example"},
 	{vsn, "0.0.1"},
 	{modules, [
 		eblog_app,

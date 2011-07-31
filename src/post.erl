@@ -17,11 +17,12 @@
 %% keywords
 
 
+to_dict(Post) ->
+    dict:from_list([
+                    {id, Post#post.id},
+                    {title, Post#post.title},
+                    {body, Post#post.body},
+                    {keywords, [dict:from_list([{keyword, Keyword}]) || Keyword <- Post#post.keywords]}
+                   ]).
 render(Post) ->
-    mustache:render(post,mustache:compile(post),
-                    dict:from_list([
-                                    {id, Post#post.id},
-                                    {title, Post#post.title},
-                                    {body, Post#post.body},
-                                    {keywords, Post#post.keywords}
-                                   ])).
+    mustache:render(post,mustache:compile(post),to_dict(Post)).

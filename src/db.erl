@@ -16,9 +16,9 @@ start() ->
     mnesia:create_schema([node()]),
     mnesia:start(),
     mnesia:create_table(post,
-                        [ {disc_copies, [node()] },
-                          {attributes,      
-                           record_info(fields,post)} ]).
+                        [{disc_copies, [node()] },
+                         {attributes,      
+                          record_info(fields,post)} ]).
 
 
 
@@ -26,7 +26,8 @@ id() ->
     {A, B, C} = erlang:now(),
     <<A:16,B:32,C:32>>.
 
-insert( Title, Keywords, Body) ->
+insert(Title, Keywords, Body) ->
+    uuid:init(),
     Fun = fun() ->
                   mnesia:write(
                     #post{
@@ -34,7 +35,7 @@ insert( Title, Keywords, Body) ->
                        title=Title,
                        keywords=Keywords, 
                        date=erlang:localtime(),
-                       body=Body,
+                       body=Body
                       })
           end,
     mnesia:transaction(Fun).

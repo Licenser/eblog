@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+ 
+<feed xmlns="http://www.w3.org/2005/Atom">
+ 
+        <title>Lice! - licenser.ne</title>
+        <subtitle>A blog about code and other interesting things</subtitle>
+        <link href="http://licenser.net/atom/" rel="self" />
+        <link href="http://licenser.net" />
+        <id>urn:uuid:ebf5f34f-25cd-4d7a-821b-1b4a9b6d049f</id>
+        <updated></updated>
+        <author>
+                <name>Heinz N. Gies</name>
+                <email>heinz@licenser.net</email>
+        </author>
+         {{#posts}}
+        <entry>
+                <title>{{title}}</title>
+                <link>http://licenser.net/post/{{id}}</link>
+                <link rel="edit" href="http://licenser.net/post/{{id}}/edit"/>
+                <summary>{{short}}</summary>
+                <updated>{{date}}</updated>
+                <id>urn:uuid:{{id}}</id>
+        </entry>
+        {{/posts}} 
+ 
+</feed>

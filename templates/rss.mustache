@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0">
+<channel>
+        <title>Lice! - licenser.net</title>
+        <description>A blog about code and other interesting things</description>
+        <link>http://licenser.net</link>
+        <lastBuildDate>{{today}}</lastBuildDate>
+        <pubDate>Mon, 06 Sep 2009 16:45:00 +0000 </pubDate>
+        {{#posts}}
+        <item>
+                <title>{{title}}</title>
+                <description>{{short}}</description>
+                <link>http://licenser.net/post/{{id}}</link>
+                <guid>{{id}}</guid>
+                <pubDate>{{date}}</pubDate>
+        </item>
+        {{/posts}} 
+</channel>
+</rss>

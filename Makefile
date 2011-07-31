@@ -9,7 +9,7 @@ clean:
 	./rebar clean
 	cd lib/erlmarkdown/; ../../rebar clean
 	make -C lib/misultin clean
-	make -C lib/mustache clean
+	-rm lib/mustache/ebin/*
 
 run: compile
 	erl -pa ebin $(LIBS)
