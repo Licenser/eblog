@@ -107,28 +107,38 @@ code_change(_OldVsn, State, _Extra) ->
 
 % ---------------------------- \/ misultin requests --------------------------------------------------------
 
+html(Req, T) ->
+    Req:ok([{"Content-Type", "text/html"}], T).
 
 handle_http('GET', ["admin"], Req) ->
     case Req:get_cookie_value("user", Req:get_cookies()) of
-        "heinz" -> Req:ok([{"Content-Type", "text/html"}], admin:render());
-        _ -> Req:ok([{"Content-Type", "text/html"}], login:render())
+        "heinz" -> html(Req, admin:render());
+        _ -> html(Req, login:render())
     end;
 handle_http('POST', ["admin"], Req) ->
     case Req:parse_post() of
         [{"User","heinz"},{"Password","heinz"}] ->
             Req:ok([Req:set_cookie("user", "heinz", [{max_age, 365*24*3600}]), {"Content-Type", "text/html"}], admin:render());
         _ ->
-            Req:ok([{"Content-Type", "text/html"}], login:render())
+           html(Req, login:render())
+    end;
+handle_http('POST', ["post", PostID, "comment"], Req) ->
+    case db:select(PostID) of
+	not_found -> html(Req, index:render());
+	_ ->  [{"nick", Nick},
+	       {"comment", Comment}] = Req:parse_post(),
+	      db:insert_comment(PostID, Nick, Comment),
+	      html(Req, login:index())
     end;
 handle_http('POST', ["post"], Req) ->
     case Req:get_cookie_value("user", Req:get_cookies()) of
         "heinz" -> 
-            [{"title",Title},
+            [{"title", Title},
              {"post", Post},
              {"keywords", Keywords}] = Req:parse_post(),
             db:insert(Title, re:split(Keywords, ",\s*", [{return,list}]), Post),
-            Req:ok([{"Content-Type", "text/html"}], admin:render());
-        _ -> Req:ok([{"Content-Type", "text/html"}], login:render())         
+            html(Req, admin:render());
+        _ ->html(Req, login:render())         
     end;
 handle_http('GET', ["feed"], Req) -> 
     Req:ok([{"Content-Type", "application/rss+xml"}], rss:render());
@@ -139,7 +149,7 @@ handle_http('GET', ["style", "blog.css"], Req) ->
 handle_http('GET', ["favicon.ico"], Req) ->
     Req:respond(404, [], "");
 handle_http('GET', _, Req) -> 
-    Req:ok([{"Content-Type", "text/html"}], index:render()).
+    html(Req, index:render()).
 
 % ---------------------------- /\ misultin requests --------------------------------------------------------
 

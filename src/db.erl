@@ -10,7 +10,7 @@
 -include("blog.hrl").
 -include_lib("stdlib/include/qlc.hrl"). 
 
--export([start/0, insert/3, select_all/0]).
+-export([start/0, insert/3, select_all/0, comments/1, insert_comment/3, select/1]).
 
 start() ->
     mnesia:create_schema([node()]),
@@ -18,34 +18,56 @@ start() ->
     mnesia:create_table(post,
                         [{disc_copies, [node()] },
                          {attributes,      
-                          record_info(fields,post)} ]).
+                          record_info(fields,post)} ]),
+    mnesia:create_table(comment,
+                        [{disc_copies, [node()] },
+                         {attributes,      
+                          record_info(fields,comment)}]).
 
-
-
-id() ->
-    {A, B, C} = erlang:now(),
-    <<A:16,B:32,C:32>>.
 
 insert(Title, Keywords, Body) ->
     uuid:init(),
     Fun = fun() ->
-                  mnesia:write(
-                    #post{
-                       id=uuid:to_string(uuid:v4()),
-                       title=Title,
-                       keywords=Keywords, 
-                       date=erlang:localtime(),
-                       body=Body
-                      })
+                  mnesia:write(#post{
+				  id=uuid:to_string(uuid:v4()),
+				  title=Title,
+				  keywords=Keywords, 
+				  date=erlang:localtime(),
+				  body=Body})
           end,
     mnesia:transaction(Fun).
 
+insert_comment(PostID, Nick, Body) ->
+    uuid:init(),
+    Fun = fun() ->
+                  mnesia:write(#comment{
+				  id=uuid:to_string(uuid:v4()),
+				  post=PostID,
+				  nick=Nick,
+				  date=erlang:localtime(),
+				  body=Body})
+          end,
+    mnesia:transaction(Fun).
+
+
 select(Index) ->
-    Fun = 
-        fun() ->
-                mnesia:read({post, Index})
-        end,
-    {atomic, [Row]}=mnesia:transaction(Fun),
+    Fun = fun() ->
+		  mnesia:read({post, Index})
+	  end,
+    case mnesia:transaction(Fun) of
+	{atomic, [Row]} -> Row;
+	{atomic, []} -> not_found;
+	Else -> Else
+    end.
+
+
+comments(PostID) ->
+    {atomic, Row} = mnesia:transaction( 
+		      fun() ->
+			      qlc:eval(qlc:q(
+					 [ C || #comment{post = ThisPost} = C <- mnesia:table(comment),
+						string:str(ThisPost, PostID) > 0])) 
+		      end),
     Row.
 
 select_all() -> 

@@ -19,7 +19,7 @@ string_join([Head | Tail], Sep, Acc) ->
 
 render() ->
     layout:render([{title, "licenser.net"},
-                   {body, mustache:render(index,mustache:compile(index),dict:new())}]).
+                   {body, mustache:render(index,"templates/index.mustache",dict:new())}]).
 
 posts() ->
     {atomic, Posts} = db:select_all(),

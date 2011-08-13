@@ -11,7 +11,7 @@
 -include_lib("include/blog.hrl"). 
 
 render() ->
-    mustache:render(rss,mustache:compile(rss),dict:new()).
+    mustache:render(rss,"templates/rss.mustache",dict:new()).
 
 posts() ->
     {atomic, Posts} = db:select_all(),

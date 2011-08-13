@@ -10,4 +10,4 @@
 -compile(export_all).
 
 render(TVars) when is_list(TVars) ->
-    mustache:render(layout,mustache:compile(layout),dict:from_list(TVars)).
+    mustache:render(layout,"templates/layout.mustache",dict:from_list(TVars)).

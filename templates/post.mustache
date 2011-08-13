@@ -6,4 +6,19 @@
 <div class="keyword">{{keyword}}</div>
 {{/keywords}}
 </div>
+<div class="comments">
+{{#comments}}
+<div class="nick">{{comment_nick}}</div>
+<div class="comment-date">{{comment_date}}</div>
+<div class="comment-body">{{comment_body}}</div>
+{{/comments}}
+</div>
+<div class="new-comment">
+<form action="post/{{id}}/comment" method="post">
+<label>Nick</label><input name="nick" type="text"/><br/>
+<label>Comment</label><br/>
+<textarea name="comment"></textarea><br/>
+<input title="Login" type="submit"/>
+</form>
+</div>
 </div>

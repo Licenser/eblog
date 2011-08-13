@@ -13,4 +13,4 @@
 
 render() ->
     layout:render([{title, "Admin - licenser.net"},
-                   {body, mustache:render(admin,mustache:compile(admin),dict:new())}]).
+                   {body, mustache:render(admin,"templates/admin.mustache",dict:new())}]).
