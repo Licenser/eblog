@@ -18,7 +18,7 @@ string_join([Head | Tail], Sep, Acc) ->
     string_join(Tail, Sep, [Sep, Head | Acc]).
 
 render() ->
-    layout:render([{title, "licenser.net"},
+    layout:render([{title, config_srv:get(name)},
                    {body, mustache:render(index,"templates/index.mustache",dict:new())}]).
 
 posts() ->

@@ -66,8 +66,15 @@ init([Options]) ->
                    {web_srv, start_link, []},
                    permanent, 60000, worker, [web_srv]
                   },
-	% spawn
-    {ok, {{one_for_all, 5, 30}, [MisultinSpecs, ServerSpecs]}}.
+    AkismetSpec = {comment_srv,
+		   {comment_srv, start_link, []},
+		   permanent, 60000, worker, [comment_srv]
+		  },
+    ConfSpec = {config_srv,
+		{config_srv, start_link, []},
+		permanent, 60000, worker, [config_srv]
+	       },
+    {ok, {{one_for_all, 5, 30}, [MisultinSpecs, ServerSpecs, ConfSpec, AkismetSpec]}}.
 
 % ============================ /\ SUPERVISOR CALLBACKS =====================================================
 

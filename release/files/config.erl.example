@@ -1,0 +1,4 @@
+{url, "http://myerlang.blog"}.
+{server, "EBlog/1.0.0"}.
+{name, "My Erlang Blog!"}.
+{akismet_api_key, ""}.

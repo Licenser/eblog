@@ -123,11 +123,27 @@ handle_http('POST', ["admin"], Req) ->
            html(Req, login:render())
     end;
 handle_http('POST', ["post", PostID, "comment"], Req) ->
+    Headers = dict:from_list(Req:get(headers)),
     case db:select(PostID) of
 	not_found -> html(Req, index:render());
 	_ ->  [{"nick", Nick},
 	       {"comment", Comment}] = Req:parse_post(),
-	      db:insert_comment(PostID, Nick, Comment),
+	      comment_srv:check(PostID,
+				{Req:get(peer_addr), 
+				 case dict:find('User-Agent', Headers) of
+				     {ok, Res} -> Res;
+				     _ -> ""
+				 end,
+				 case dict:find('Referrer', Headers) of
+				     {ok, Res} -> Res;
+				     _ -> ""
+				 end,
+				 config_srv:get(url) ++ "posts/" ++ PostID,% Permalink,
+				 "comment",
+				 Nick,
+				 "", % email
+				 "", % CommentURL,
+				 Comment}),
 	      html(Req, login:index())
     end;
 handle_http('POST', ["post"], Req) ->

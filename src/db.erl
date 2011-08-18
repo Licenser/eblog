@@ -10,7 +10,7 @@
 -include("blog.hrl").
 -include_lib("stdlib/include/qlc.hrl"). 
 
--export([start/0, insert/3, select_all/0, comments/1, insert_comment/3, select/1]).
+-export([start/0, insert/3, select_all/0, comments/1, insert_comment/4, select/1]).
 
 start() ->
     mnesia:create_schema([node()]),
@@ -37,7 +37,7 @@ insert(Title, Keywords, Body) ->
           end,
     mnesia:transaction(Fun).
 
-insert_comment(PostID, Nick, Body) ->
+insert_comment(PostID, Nick, Body, Type) ->
     uuid:init(),
     Fun = fun() ->
                   mnesia:write(#comment{
@@ -45,7 +45,8 @@ insert_comment(PostID, Nick, Body) ->
 				  post=PostID,
 				  nick=Nick,
 				  date=erlang:localtime(),
-				  body=Body})
+				  body=Body,
+				  type=Type})
           end,
     mnesia:transaction(Fun).
 
@@ -65,8 +66,9 @@ comments(PostID) ->
     {atomic, Row} = mnesia:transaction( 
 		      fun() ->
 			      qlc:eval(qlc:q(
-					 [ C || #comment{post = ThisPost} = C <- mnesia:table(comment),
-						string:str(ThisPost, PostID) > 0])) 
+					 [ C || #comment{post = ThisPost, type = Type} = C <- mnesia:table(comment),
+						string:str(ThisPost, PostID) > 0, ham == Type
+					 ])) 
 		      end),
     Row.
 
