@@ -1,3 +1,15 @@
 -record(post, {id, title, date, keywords, body}).
 -record(comment, 
-	{id, post, date, email, nick, title, body, type}).
+	{id="",
+	 post_id="",
+	 date,
+	 ip="0.0.0.0",
+	 user_agent,
+	 referrer,
+	 type="comment",
+	 author,
+	 email="",
+	 title="",
+	 body,
+	 rating=spam,
+	 confirmed=false}).

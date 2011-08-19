@@ -30,6 +30,8 @@
 -module(web_srv).
 -behaviour(gen_server).
 
+-include("blog.hrl").
+
 % gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
@@ -124,27 +126,31 @@ handle_http('POST', ["admin"], Req) ->
     end;
 handle_http('POST', ["post", PostID, "comment"], Req) ->
     Headers = dict:from_list(Req:get(headers)),
+    {IpA, IpB, IpC, IpD} = Req:get(peer_addr),
+    IP = erlang:integer_to_list(IpA) ++ "." ++
+	erlang:integer_to_list(IpB) ++ "." ++
+	erlang:integer_to_list(IpC) ++ "." ++
+	erlang:integer_to_list(IpD),
     case db:select(PostID) of
 	not_found -> html(Req, index:render());
 	_ ->  [{"nick", Nick},
 	       {"comment", Comment}] = Req:parse_post(),
-	      comment_srv:check(PostID,
-				{Req:get(peer_addr), 
-				 case dict:find('User-Agent', Headers) of
-				     {ok, Res} -> Res;
-				     _ -> ""
-				 end,
-				 case dict:find('Referrer', Headers) of
-				     {ok, Res} -> Res;
-				     _ -> ""
-				 end,
-				 config_srv:get(url) ++ "posts/" ++ PostID,% Permalink,
-				 "comment",
-				 Nick,
-				 "", % email
-				 "", % CommentURL,
-				 Comment}),
-	      html(Req, login:index())
+	      comment_srv:check(#comment{
+				   post_id=PostID,
+				   ip=IP,
+				   date=erlang:localtime(),
+				   user_agent=case dict:find('User-Agent', Headers) of
+						  {ok, Res} -> Res;
+						  _ -> ""
+					      end,
+				   referrer=case dict:find('Referrer', Headers) of
+						{ok, Res} -> Res;
+						_ -> ""
+					    end,
+				   type="comment",
+				   author=Nick,
+				   body=Comment}),
+	      html(Req, index:render())
     end;
 handle_http('POST', ["post"], Req) ->
     case Req:get_cookie_value("user", Req:get_cookies()) of

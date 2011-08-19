@@ -7,11 +7,12 @@
 %%% Created : 14 Aug 2011 by Heinz N. Gies <licenser@171.10.20.172.in-addr.arpa.noptr.antlabs.com>
 %%%-------------------------------------------------------------------
 -module(comment_srv).
-
 -behaviour(gen_server).
 
+-include("blog.hrl").
+
 %% API
--export([start_link/0, verify/0, check/2, simple_check/5]).
+-export([start_link/0, verify/0, check/1]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
@@ -25,21 +26,8 @@
 %%% API
 %%%===================================================================
 
-simple_check(PostID, UserIP, UserAgent, Author, Comment) ->
-    check(PostID, 
-	  {UserIP, 
-	   UserAgent,
-	   "",
-	   "",
-	   "comment",
-	   Author,
-	   "",
-	   "",
-	   Comment
-	  }).
-
-check(PostID, Comment) ->
-    gen_server:cast(?SERVER, {check, PostID, Comment}).
+check(Comment) ->
+    gen_server:call(?SERVER, {check, Comment}).
 
 verify() ->
     gen_server:cast(?SERVER, verify).
@@ -89,30 +77,20 @@ init([]) ->
 %%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
-handle_call(_Request, _From, State) ->
-    Reply = ok,
-    {reply, Reply, State}.
-
-%%--------------------------------------------------------------------
-%% @private
-%% @doc
-%% Handling cast messages
-%%
-%% @spec handle_cast(Msg, State) -> {noreply, State} |
-%%                                  {noreply, State, Timeout} |
-%%                                  {stop, Reason, State}
-%% @end
-%%--------------------------------------------------------------------
-handle_cast({check, PostID, {UserIP, 
-		     UserAgent,
-		     Referrer,
-		     Permalink,
-		     Type,
-		     Author,
-		     Email,
-		     CommentURL,
-		     CommentContent
-		    } = Comment}, #state{server = Server, webside = Webside, key = Key} = State) ->
+handle_call({check, #comment{ip=UserIP, 
+			     user_agent=UserAgent,
+			     referrer=Referrer,
+			     post_id=PostID,
+			     type=Type,
+			     author=Author,
+			     email=Email,
+			     id = ID,
+			     body = CommentContent
+			    } = Comment}, 
+	    _From, 
+	    #state{server = Server, webside = Webside, key = Key} = State) ->
+    Permalink = Webside ++ "/posts/" ++ PostID,
+    CommentURL = Webside ++ "/posts/" ++ PostID ++ "/comments/" ++ ID,
     Body = "blog=" ++ edoc_lib:escape_uri(Webside) ++
 	"&user_ip=" ++ edoc_lib:escape_uri(UserIP) ++
 	"&user_agent=" ++ edoc_lib:escape_uri(UserAgent) ++
@@ -129,11 +107,13 @@ handle_cast({check, PostID, {UserIP,
 		       {Url, [{"User-Agent", UA}],
 			"application/x-www-form-urlencoded", Body},
 		       [], [{body_format, string}]) of
-	{ok,{_Reply, _Header, "true"}} -> handle_spam(PostID, Comment);
-	{ok,{_Reply, _Header, "false"}} -> handle_ham(PostID, Comment)
+	{ok,{_Reply, _Header, "true"}} -> handle_spam(Comment#comment{rating=spam}),
+					  Reply = spam;
+	{ok,{_Reply, _Header, "false"}} -> handle_ham(Comment#comment{rating=ham}),
+					   Reply = ham
     end,
-    {noreply, State};
-handle_cast(verify, #state{server = Server, webside = Webside, key = Key} = State) ->
+        {reply, Reply, State};
+handle_call(verify, _From, #state{server = Server, webside = Webside, key = Key} = State) ->
     UA = Server ++ " | ErlangAkismet/1.0.0",
     Url = "http://rest.akismet.com/1.1/verify-key",
     Body = "key=" ++ Key ++"&blog=" ++ Webside,
@@ -144,7 +124,21 @@ handle_cast(verify, #state{server = Server, webside = Webside, key = Key} = Stat
 		       "application/x-www-form-urlencoded", Body},
 		      [], [{body_format, string}]),
     io:format("RES >~p~n", [Result]),
-    {noreply, State};
+    {reply, ok, State};
+handle_call(_Request, _From, State) ->
+    Reply = ok,
+    {reply, Reply, State}.
+
+%%--------------------------------------------------------------------
+%% @private
+%% @doc
+%% Handling cast messages
+%%
+%% @spec handle_cast(Msg, State) -> {noreply, State} |
+%%                                  {noreply, State, Timeout} |
+%%                                  {stop, Reason, State}
+%% @end
+%%--------------------------------------------------------------------
 handle_cast(_Msg, State) ->
     {noreply, State}.
 
@@ -190,27 +184,7 @@ code_change(_OldVsn, State, _Extra) ->
 %%% Internal functions
 %%%===================================================================
 
-handle_spam(PostID, {UserIP, 
-		     UserAgent,
-		     Referrer,
-		     Permalink,
-		     Type,
-		     Author,
-		     Email,
-		     CommentURL,
-		     CommentContent
-		    } = Comment) ->
-    db:insert_comment(PostID, Author, Comment, spam),
-    io:format("SPAM> ~p~n", [Comment]).
-handle_ham(PostID, {UserIP, 
-	    UserAgent,
-	    Referrer,
-	    Permalink,
-	    Type,
-	    Author,
-	    Email,
-	    CommentURL,
-	    CommentContent
-	   } = Comment) ->
-    db:insert_comment(PostID, Author, Comment, ham),
-    io:format("HAM > ~p~n", [Comment]).
+handle_spam(Comment) ->
+    db:insert_comment(Comment).
+handle_ham(Comment) ->
+    db:insert_comment(Comment).

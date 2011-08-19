@@ -8,7 +8,7 @@
 %%%-------------------------------------------------------------------
 -module(post).
 -compile(export_all).
--include_lib("include/blog.hrl"). 
+-include("blog.hrl").
 
 
 %% id
@@ -21,7 +21,7 @@ date_to_str({{Y,Mo,D},{H,Mi,_}}) ->
 
 comment_to_dict(Comment) ->
     dict:from_list([
-                    {comment_nick, Comment#comment.nick},
+                    {comment_nick, Comment#comment.author},
                     {comment_date, date_to_str(Comment#comment.date)},
                     {comment_body, markdown:conv(Comment#comment.body)}
                    ]).

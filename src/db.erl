@@ -10,7 +10,7 @@
 -include("blog.hrl").
 -include_lib("stdlib/include/qlc.hrl"). 
 
--export([start/0, insert/3, select_all/0, comments/1, insert_comment/4, select/1]).
+-export([start/0, insert/3, select_all/0, comments/1, insert_comment/1, select/1]).
 
 start() ->
     mnesia:create_schema([node()]),
@@ -37,16 +37,11 @@ insert(Title, Keywords, Body) ->
           end,
     mnesia:transaction(Fun).
 
-insert_comment(PostID, Nick, Body, Type) ->
+insert_comment(Comment) ->
     uuid:init(),
+    C = Comment#comment{id=uuid:to_string(uuid:v4())},
     Fun = fun() ->
-                  mnesia:write(#comment{
-				  id=uuid:to_string(uuid:v4()),
-				  post=PostID,
-				  nick=Nick,
-				  date=erlang:localtime(),
-				  body=Body,
-				  type=Type})
+                  mnesia:write(C)
           end,
     mnesia:transaction(Fun).
 
@@ -66,8 +61,8 @@ comments(PostID) ->
     {atomic, Row} = mnesia:transaction( 
 		      fun() ->
 			      qlc:eval(qlc:q(
-					 [ C || #comment{post = ThisPost, type = Type} = C <- mnesia:table(comment),
-						string:str(ThisPost, PostID) > 0, ham == Type
+					 [ C || #comment{post_id = ThisPost, rating = Rating} = C <- mnesia:table(comment),
+						string:str(ThisPost, PostID) > 0, Rating == ham
 					 ])) 
 		      end),
     Row.
@@ -79,15 +74,3 @@ select_all() ->
                          [ X || X <- mnesia:table(post) ] 
                         )) 
       end).
-
-select_search( Word ) -> 
-    mnesia:transaction( 
-      fun() ->
-              qlc:eval(qlc:q(
-                         [ {F0,F1,F2,F3} || 
-                             {F0,F1,F2,F3} <- 
-                                 mnesia:table(post),
-                             (string:str(F2, Word)>0) or  
-                                                        (string:str(F3, Word)>0)
-                         ])) 
-      end ).

@@ -98,7 +98,7 @@ handle_call(_Request, _From, State) ->
 handle_cast(reload, State) ->
     {ok, Terms} = file:consult("config.erl"),
     Dict = dict:from_list(Terms),
-    {noreply, #state{config = Dict}};
+    {noreply, State#state{config = Dict}};
 handle_cast(_Msg, State) ->
     {noreply, State}.
 
