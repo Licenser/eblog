@@ -113,13 +113,16 @@ html(Req, T) ->
     Req:ok([{"Content-Type", "text/html"}], T).
 
 handle_http('GET', ["admin"], Req) ->
+    Admin = config_srv:get(admin_user),
     case Req:get_cookie_value("user", Req:get_cookies()) of
-        "heinz" -> html(Req, admin:render());
+        Admin -> html(Req, admin:render());
         _ -> html(Req, login:render())
     end;
 handle_http('POST', ["admin"], Req) ->
+    Admin = config_srv:get(admin_user),
+    Pass = config_srv:get(admin_pass),
     case Req:parse_post() of
-        [{"User","heinz"},{"Password","heinz"}] ->
+        [{"User",Admin},{"Password",Pass}] ->
             Req:ok([Req:set_cookie("user", "heinz", [{max_age, 365*24*3600}]), {"Content-Type", "text/html"}], admin:render());
         _ ->
            html(Req, login:render())

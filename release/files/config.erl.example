@@ -2,3 +2,6 @@
 {server, "EBlog/1.0.0"}.
 {name, "My Erlang Blog!"}.
 {akismet_api_key, ""}.
+{admin_user, ""}.
+{admin_pass, ""}.
+
